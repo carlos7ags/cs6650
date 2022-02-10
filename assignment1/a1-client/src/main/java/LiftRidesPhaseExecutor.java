@@ -1,4 +1,4 @@
-public class LiftRidesLoadsThreadsGen {
+public class LiftRidesPhaseExecutor {
 
 
   public static void main(String[] args) {

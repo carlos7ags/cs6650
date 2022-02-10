@@ -25,7 +25,6 @@ import java.io.IOException;
  * ResortsListResorts
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2022-02-09T03:12:56.111Z[GMT]")
 public class ResortsListResorts {
   @SerializedName("resortName")
   private String resortName = null;
@@ -71,7 +70,7 @@ public class ResortsListResorts {
 
 
   @Override
-  public boolean equals(java.lang.Object o) {
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
@@ -104,7 +103,7 @@ public class ResortsListResorts {
    * Convert the given object to string with each line indented by 4 spaces
    * (except the first line).
    */
-  private String toIndentedString(java.lang.Object o) {
+  private String toIndentedString(Object o) {
     if (o == null) {
       return "null";
     }

@@ -28,7 +28,6 @@ import java.util.List;
  * ResortsList
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2022-02-09T03:12:56.111Z[GMT]")
 public class ResortsList {
   @SerializedName("resorts")
   private List<ResortsListResorts> resorts = null;
@@ -61,7 +60,7 @@ public class ResortsList {
 
 
   @Override
-  public boolean equals(java.lang.Object o) {
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
@@ -92,7 +91,7 @@ public class ResortsList {
    * Convert the given object to string with each line indented by 4 spaces
    * (except the first line).
    */
-  private String toIndentedString(java.lang.Object o) {
+  private String toIndentedString(Object o) {
     if (o == null) {
       return "null";
     }
