@@ -73,16 +73,11 @@ public class LiftRidesThread implements Runnable {
 
   @Override
   public void run() {
-    IntStream randomSkierIds = random.ints(this.startSkierId, this.endSkierId + 1);
-    IntStream randomLiftIds = random.ints(1, this.skiLiftsNumber + 1);
-    IntStream randomTimes = random.ints(this.starTime, this.endTime + 1);
-    IntStream randomWaitTimes = random.ints(0, 10 + 1);
-
     for (int i = 0; i < this.requestsNumber; i++) {
-      int skierId = randomSkierIds.findAny().getAsInt();
-      int liftId = randomLiftIds.findAny().getAsInt();
-      int time = randomTimes.findAny().getAsInt();
-      int waitTime = randomWaitTimes.findAny().getAsInt();
+      int skierId = random.ints(this.startSkierId, this.endSkierId + 1).findAny().getAsInt();
+      int liftId = random.ints(1, this.skiLiftsNumber + 1).findAny().getAsInt();
+      int time = random.ints(this.starTime, this.endTime + 1).findAny().getAsInt();
+      int waitTime = random.ints(0, 10 + 1).findAny().getAsInt();
       this.postNewLiftRide(apiInstance, skierId, liftId, time, waitTime);
     }
     this.nextPhaseLatch.countDown();
