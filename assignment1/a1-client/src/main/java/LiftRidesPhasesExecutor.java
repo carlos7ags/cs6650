@@ -3,10 +3,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Thread.MAX_PRIORITY;
 
 public class LiftRidesPhasesExecutor implements Runnable {
   static Logger log = Logger.getLogger(LiftRidesPhasesExecutor.class.getName());
@@ -16,7 +13,7 @@ public class LiftRidesPhasesExecutor implements Runnable {
   private AtomicInteger unsuccessfulCount = new AtomicInteger(0);
 
   private void executePhase(ExecutorService executorService, int numThreadsFraction, double numRunsFactor, double progressToReleaseLatch,
-                            int startTime, int endTime) throws InterruptedException {
+                            int startTime, int endTime) {
     
     int numSkiers = clientConfig.getNumSkiers();
     int numThreads = clientConfig.getNumThreads();
@@ -36,7 +33,11 @@ public class LiftRidesPhasesExecutor implements Runnable {
       Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime, serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount);
       executorService.execute(thread);
     }
-    nextPhaseLatch.await();
+    try {
+      nextPhaseLatch.await();
+    } catch (InterruptedException e) {
+      log.error(e);
+    }
   }
 
   @Override
