@@ -2,14 +2,12 @@ import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.SkiersApi;
 import io.swagger.client.model.LiftRide;
-import org.apache.log4j.Logger;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LiftRidesThread implements Runnable {
-  static Logger log = Logger.getLogger(LiftRidesThread.class.getName());
   private final int RESORT_ID = 1;
   private final String SEASON_ID = "2022";
   private final String DAY_ID = "27";
@@ -61,6 +59,7 @@ public class LiftRidesThread implements Runnable {
       } catch (ApiException e) {
         if (++tries == maxTries) {
           this.unsuccessfulCount.getAndIncrement();
+          break;
         }
       }
     }

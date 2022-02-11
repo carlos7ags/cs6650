@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiftRidesLoadsTester implements Runnable {
-  static Logger log = Logger.getLogger(LiftRidesLoadsTester.class.getName());
+public class LiftRidesLoadsTesterExtended implements Runnable {
+  static Logger log = Logger.getLogger(LiftRidesLoadsTesterExtended.class.getName());
 
   private final ClientConfig clientConfig = new ClientConfig();
   private final AtomicInteger successfulCount = new AtomicInteger(0);
@@ -32,7 +32,7 @@ public class LiftRidesLoadsTester implements Runnable {
       int startSkierID = (i * skiersPerThread) + 1;
       int endSkierID = (i + 1) * skiersPerThread;
       log.info("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
-      Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime, serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount, phase);
+      Runnable thread = new LiftRidesThreadExtended(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime, serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount, phase);
       executorService.execute(thread);
     }
     try {
@@ -69,7 +69,7 @@ public class LiftRidesLoadsTester implements Runnable {
   }
 
   public static void main(String[] args) {
-    LiftRidesLoadsTester phasesExecutor = new LiftRidesLoadsTester();
+    LiftRidesLoadsTesterExtended phasesExecutor = new LiftRidesLoadsTesterExtended();
     phasesExecutor.run();
   }
 }

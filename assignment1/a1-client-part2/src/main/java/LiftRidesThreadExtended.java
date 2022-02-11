@@ -8,8 +8,8 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiftRidesThread implements Runnable {
-  static Logger log = Logger.getLogger(LiftRidesThread.class.getName());
+public class LiftRidesThreadExtended implements Runnable {
+  static Logger log = Logger.getLogger(LiftRidesThreadExtended.class.getName());
   private final int RESORT_ID = 1;
   private final String SEASON_ID = "2022";
   private final String DAY_ID = "27";
@@ -29,7 +29,7 @@ public class LiftRidesThread implements Runnable {
   private final Random random = new Random();
   private final SkiersApi apiInstance = new SkiersApi();
 
-  public LiftRidesThread(int requestsNumber, int skiLiftsNumber,
+  public LiftRidesThreadExtended(int requestsNumber, int skiLiftsNumber,
                          int startSkierId, int endSkierId, int starTime, int endTime, String serverBasePath,
                          CountDownLatch nextPhaseLatch, AtomicInteger successfulCount, AtomicInteger unsuccessfulCount, int phase) {
     this.requestsNumber = requestsNumber;

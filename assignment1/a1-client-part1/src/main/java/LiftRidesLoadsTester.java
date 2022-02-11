@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiftRidesLoadsTester implements Runnable {
+public class LiftRidesLoadsTester {
   static Logger log = Logger.getLogger(LiftRidesLoadsTester.class.getName());
 
   private final ClientConfig clientConfig = new ClientConfig();
@@ -31,8 +31,10 @@ public class LiftRidesLoadsTester implements Runnable {
     for (int i = 0; i < phaseThreads; i++) {
       int startSkierID = (i * skiersPerThread) + 1;
       int endSkierID = (i + 1) * skiersPerThread;
-      log.info("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
-      Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime, serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount);
+      log.debug("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
+          + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
+      Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime,
+          serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount);
       executorService.execute(thread);
     }
     try {
@@ -42,9 +44,8 @@ public class LiftRidesLoadsTester implements Runnable {
     }
   }
 
-  @Override
-  public void run() {
-
+  public void testLoad() {
+    log.info(this.clientConfig.toString());
     long phasesExecutorStartTime = System.currentTimeMillis();
     int numThreads = clientConfig.getNumThreads();
     ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
@@ -61,15 +62,15 @@ public class LiftRidesLoadsTester implements Runnable {
       }
     }
 
-    long totalRunTime = (System.currentTimeMillis() - phasesExecutorStartTime) / 1000;
+    long totalRunTime = (System.currentTimeMillis() - phasesExecutorStartTime);
     log.info("Successful requests: " + this.successfulCount.get());
     log.info("Unsuccessful requests: " + this.unsuccessfulCount.get());
-    log.info("Total run time / wall time (seconds): " + totalRunTime);
-    log.info("Total throughput in requests per second: " + ((this.successfulCount.get() + this.unsuccessfulCount.get()) / totalRunTime));
+    log.info("Total run time / wall time (milliseconds): " + totalRunTime);
+    log.info("Total throughput in requests per second: " + ((this.successfulCount.get() + this.unsuccessfulCount.get()) / (totalRunTime / 1000)));
   }
 
   public static void main(String[] args) {
     LiftRidesLoadsTester phasesExecutor = new LiftRidesLoadsTester();
-    phasesExecutor.run();
+    phasesExecutor.testLoad();
   }
 }
