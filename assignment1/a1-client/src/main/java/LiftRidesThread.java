@@ -15,9 +15,9 @@ public class LiftRidesThread implements Runnable {
   private final String SEASON_ID = "2022";
   private final String DAY_ID = "27";
 
-  private final CountDownLatch finishCount;
-  private final AtomicInteger successCount;
-  private final AtomicInteger failCount;
+  private final CountDownLatch nextPhaseLatch;
+  private final AtomicInteger successfulCount;
+  private final AtomicInteger unsuccessfulCount;
 
   private final int requestsNumber;
   private final int skiLiftsNumber;
@@ -25,22 +25,23 @@ public class LiftRidesThread implements Runnable {
   private final int endSkierId;
   private final int starTime;
   private final int endTime;
+  private final CountDownLatch nextPhaseLatch;
 
   private final Random random = new Random();
   private final SkiersApi apiInstance = new SkiersApi();
 
   public LiftRidesThread(int requestsNumber, int skiLiftsNumber,
                          int startSkierId, int endSkierId, int starTime, int endTime, String serverBasePath,
-                         CountDownLatch finishCount, AtomicInteger successCount, AtomicInteger failCount) {
+                         CountDownLatch nextPhaseLatch, AtomicInteger successfulCount, AtomicInteger unsuccessfulCount) {
     this.requestsNumber = requestsNumber;
     this.skiLiftsNumber = skiLiftsNumber;
     this.startSkierId = startSkierId;
     this.endSkierId = endSkierId;
     this.starTime = starTime;
     this.endTime = endTime;
-    this.finishCount = finishCount;
-    this.successCount = successCount;
-    this.failCount = failCount;
+    this.nextPhaseLatch = nextPhaseLatch;
+    this.successfulCount = successfulCount;
+    this.unsuccessfulCount = unsuccessfulCount;
 
     ApiClient client = apiInstance.getApiClient();
     client.setBasePath(serverBasePath);
