@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 public class LiftRidesThread implements Runnable {
   static Logger log = Logger.getLogger(LiftRidesThread.class.getName());
@@ -56,16 +55,12 @@ public class LiftRidesThread implements Runnable {
 
     while (true) {
       try {
-        long startTime = System.currentTimeMillis();
         apiInstance.writeNewLiftRide(liftRide, this.RESORT_ID, this.SEASON_ID, this.DAY_ID, skierId);
-        long endTime = System.currentTimeMillis();
         this.successfulCount.getAndIncrement();
-        log.info("Lift Ride registered correctly. Latency: " + (endTime - startTime) + ", Start time: " + startTime + ", End time: " + endTime);
         break;
       } catch (ApiException e) {
         if (++tries == maxTries) {
           this.unsuccessfulCount.getAndIncrement();
-          log.error(e.getMessage());
         }
       }
     }
