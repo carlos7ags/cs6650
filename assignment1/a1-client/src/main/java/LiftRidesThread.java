@@ -25,7 +25,6 @@ public class LiftRidesThread implements Runnable {
   private final int endSkierId;
   private final int starTime;
   private final int endTime;
-  private final CountDownLatch nextPhaseLatch;
 
   private final Random random = new Random();
   private final SkiersApi apiInstance = new SkiersApi();
@@ -48,18 +47,27 @@ public class LiftRidesThread implements Runnable {
   }
 
   private void postNewLiftRide(SkiersApi apiInstance, int skierId, int liftId, int time, int waitTime) {
+    int tries = 0;
+    int maxTries = 5;
     LiftRide liftRide = new LiftRide();
     liftRide.setLiftID(liftId);
     liftRide.setTime(time);
     liftRide.setWaitTime(waitTime);
 
-    try {
-      long startTime = System.currentTimeMillis();
-      apiInstance.writeNewLiftRide(liftRide, this.RESORT_ID, this.SEASON_ID, this.DAY_ID, skierId);
-      long endTime = System.currentTimeMillis();
-      log.info("Lift Ride registered correctly. Latency: " + (endTime - startTime) + ", Start time: " + startTime + ", End time: " + endTime);
-    } catch (ApiException e) {
-      log.error(e.getMessage());
+    while (true) {
+      try {
+        long startTime = System.currentTimeMillis();
+        apiInstance.writeNewLiftRide(liftRide, this.RESORT_ID, this.SEASON_ID, this.DAY_ID, skierId);
+        long endTime = System.currentTimeMillis();
+        this.successfulCount.getAndIncrement();
+        log.info("Lift Ride registered correctly. Latency: " + (endTime - startTime) + ", Start time: " + startTime + ", End time: " + endTime);
+        break;
+      } catch (ApiException e) {
+        if (++tries == maxTries) {
+          this.unsuccessfulCount.getAndIncrement();
+          log.error(e.getMessage());
+        }
+      }
     }
   }
 
@@ -77,5 +85,6 @@ public class LiftRidesThread implements Runnable {
       int waitTime = randomWaitTimes.findAny().getAsInt();
       this.postNewLiftRide(apiInstance, skierId, liftId, time, waitTime);
     }
+    this.nextPhaseLatch.countDown();
   }
 }
