@@ -1,5 +1,11 @@
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +19,21 @@ public class LiftRidesLoadsTesterExtended {
   private final AtomicInteger successfulCount = new AtomicInteger(0);
   private final AtomicInteger unsuccessfulCount = new AtomicInteger(0);
 
+  public static FileChannel channel;
+
+  static {
+    String reportFile = "logs/requests/log_" + new SimpleDateFormat("yyyyMMddHHmm'.csv'").format(new Date());
+
+    try {
+      FileUtils.touch(new File(reportFile));
+
+      RandomAccessFile writer = new RandomAccessFile(reportFile.toString(), "rw");
+      channel = writer.getChannel();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   public void testLoad() {
     log.info(this.clientConfig.toString());
     long phasesExecutorStartTime = System.currentTimeMillis();
@@ -22,9 +43,9 @@ public class LiftRidesLoadsTesterExtended {
     try {
       double progressToReleaseLatch = 0.2;
 
-      int phaseOneThreads = numThreads / 4;
-      CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneThreads * progressToReleaseLatch));
-      Runnable phaseOneExecutor = new LiftRidesPhaseExtended(1, executorService, phaseOneThreads,
+      int phaseOneNumThreads = numThreads / 4;
+      CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneNumThreads * progressToReleaseLatch));
+      Runnable phaseOneExecutor = new LiftRidesPhaseExtended(1, executorService, phaseOneNumThreads,
           0.2, 1, 90, phaseOneLatch, successfulCount, unsuccessfulCount);
       executorService.execute(phaseOneExecutor);
       phaseOneLatch.await();
@@ -35,9 +56,9 @@ public class LiftRidesLoadsTesterExtended {
       executorService.execute(phaseTwoExecutor);
       phaseTwoLatch.await();
 
-      int phaseThreeThreads = numThreads / 5;
-      CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeThreads);
-      Runnable phaseThreeExecutor = new LiftRidesPhaseExtended(3, executorService, phaseThreeThreads,
+      int phaseThreeNumThreads = numThreads / 5;
+      CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeNumThreads);
+      Runnable phaseThreeExecutor = new LiftRidesPhaseExtended(3, executorService, phaseThreeNumThreads,
           0.2, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
       executorService.execute(phaseThreeExecutor);
       phaseThreeLatch.await();

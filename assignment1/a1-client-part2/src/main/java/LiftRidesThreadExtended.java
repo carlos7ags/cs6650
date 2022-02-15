@@ -4,6 +4,9 @@ import io.swagger.client.api.SkiersApi;
 import io.swagger.client.model.LiftRide;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +63,16 @@ public class LiftRidesThreadExtended implements Runnable {
         long startTime = System.currentTimeMillis();
         apiInstance.writeNewLiftRide(liftRide, this.RESORT_ID, this.SEASON_ID, this.DAY_ID, skierId);
         long endTime = System.currentTimeMillis();
-        log.trace((new RequestLog(this.phase, startTime, "POST", endTime - startTime, 201)).toString());
+
+        try {
+          ByteBuffer buffer = ByteBuffer.wrap(
+              new RequestLog(this.phase, startTime, "POST", endTime - startTime, 201)
+                  .toString().getBytes(StandardCharsets.UTF_8));
+          LiftRidesLoadsTesterExtended.channel.write(buffer);
+        } catch (IOException e) {
+          log.error("Failed to write in summary file.", e);
+        }
+
         this.successfulCount.getAndIncrement();
         break;
       } catch (ApiException e) {

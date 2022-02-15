@@ -22,9 +22,9 @@ public class LiftRidesLoadsTester {
     try {
       double progressToReleaseLatch = 0.2;
 
-      int phaseOneThreads = numThreads / 4;
-      CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneThreads * progressToReleaseLatch));
-      Runnable phaseOneExecutor = new LiftRidesPhase(1, executorService, phaseOneThreads,
+      int phaseOneNumThreads = numThreads / 4;
+      CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneNumThreads * progressToReleaseLatch));
+      Runnable phaseOneExecutor = new LiftRidesPhase(1, executorService, phaseOneNumThreads,
           0.2, 1, 90, phaseOneLatch, successfulCount, unsuccessfulCount);
       executorService.execute(phaseOneExecutor);
       phaseOneLatch.await();
@@ -35,9 +35,9 @@ public class LiftRidesLoadsTester {
       executorService.execute(phaseTwoExecutor);
       phaseTwoLatch.await();
 
-      int phaseThreeThreads = numThreads / 5;
-      CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeThreads);
-      Runnable phaseThreeExecutor = new LiftRidesPhase(3, executorService, phaseThreeThreads,
+      int phaseThreeNumThreads = numThreads / 5;
+      CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeNumThreads);
+      Runnable phaseThreeExecutor = new LiftRidesPhase(3, executorService, phaseThreeNumThreads,
           0.2, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
       executorService.execute(phaseThreeExecutor);
       phaseThreeLatch.await();

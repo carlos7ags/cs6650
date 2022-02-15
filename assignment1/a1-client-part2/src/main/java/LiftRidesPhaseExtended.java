@@ -46,7 +46,7 @@ public class LiftRidesPhaseExtended implements Runnable {
     for (int i = 0; i < phaseThreads; i++) {
       int startSkierID = (i * skiersPerThread) + 1;
       int endSkierID = (i + 1) * skiersPerThread;
-      log.info("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
+      log.trace("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
           + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
       Runnable thread = new LiftRidesThreadExtended(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime,
           serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount, phase);
