@@ -20,6 +20,7 @@ public class LiftRidesLoadsTesterExtended {
   private final AtomicInteger unsuccessfulCount = new AtomicInteger(0);
 
   public static FileChannel channel;
+  public static RandomAccessFile writer;
 
   static {
     String reportFile = "logs/requests/log_" + new SimpleDateFormat("yyyyMMddHHmm'.csv'").format(new Date());
@@ -27,7 +28,7 @@ public class LiftRidesLoadsTesterExtended {
     try {
       FileUtils.touch(new File(reportFile));
 
-      RandomAccessFile writer = new RandomAccessFile(reportFile.toString(), "rw");
+      writer = new RandomAccessFile(reportFile, "rw");
       channel = writer.getChannel();
     } catch (IOException e) {
       e.printStackTrace();
@@ -75,11 +76,19 @@ public class LiftRidesLoadsTesterExtended {
       }
     }
 
+
     long totalRunTime = (System.currentTimeMillis() - phasesExecutorStartTime);
     log.info("Successful requests: " + this.successfulCount.get());
     log.info("Unsuccessful requests: " + this.unsuccessfulCount.get());
     log.info("Total run time / wall time (milliseconds): " + totalRunTime);
     log.info("Total throughput in requests per second: " + ((this.successfulCount.get() + this.unsuccessfulCount.get()) / (totalRunTime / 1000)));
+
+    try {
+      channel.close();
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   public static void main(String[] args) {

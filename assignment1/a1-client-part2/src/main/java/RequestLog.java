@@ -9,6 +9,6 @@ public class RequestLog {
   private int responseCode;
 
   public String toString() {
-    return String.format("%d,%d,%s,%d,%d}", phase, startTime, requestType, latency, responseCode);
+    return String.format("%d,%d,%s,%d,%d\n", phase, startTime, requestType, latency, responseCode);
   }
 }
