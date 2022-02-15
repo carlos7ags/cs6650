@@ -13,46 +13,38 @@ public class LiftRidesLoadsTester {
   private final AtomicInteger successfulCount = new AtomicInteger(0);
   private final AtomicInteger unsuccessfulCount = new AtomicInteger(0);
 
-  private void executePhase(int phase, ExecutorService executorService, int numThreadsFraction, double numRunsFactor, double progressToReleaseLatch,
-                            int startTime, int endTime) {
-    
-    int numSkiers = clientConfig.getNumSkiers();
-    int numThreads = clientConfig.getNumThreads();
-    int numRuns = clientConfig.getNumRuns();
-    int skiLiftsNumber = clientConfig.getNumLifts();
-    String serverBasePath = clientConfig.getServer();
-
-    int phaseThreads = numThreads / numThreadsFraction;
-    int skiersPerThread = numSkiers / phaseThreads;
-    int requestsNumber = (int) ((numRuns * numRunsFactor) * skiersPerThread);
-
-    CountDownLatch nextPhaseLatch = new CountDownLatch((int) Math.ceil(phaseThreads * progressToReleaseLatch));
-
-    for (int i = 0; i < phaseThreads; i++) {
-      int startSkierID = (i * skiersPerThread) + 1;
-      int endSkierID = (i + 1) * skiersPerThread;
-      log.debug("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
-          + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
-      Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime,
-          serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(thread);
-    }
-    try {
-      nextPhaseLatch.await();
-    } catch (InterruptedException e) {
-      log.error(e);
-    }
-  }
-
   public void testLoad() {
     log.info(this.clientConfig.toString());
     long phasesExecutorStartTime = System.currentTimeMillis();
     int numThreads = clientConfig.getNumThreads();
     ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
 
-    this.executePhase(1, executorService, 4, 0.2, 0.2, 1, 90);
-    this.executePhase(2, executorService, 1, 0.6, 0.2, 91, 360);
-    this.executePhase(3, executorService, 5, 0.2, 0.0, 361, 420);
+    try {
+      double progressToReleaseLatch = 0.2;
+
+      int phaseOneThreads = numThreads / 4;
+      CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneThreads * progressToReleaseLatch));
+      Runnable phaseOneExecutor = new LiftRidesPhase(1, executorService, phaseOneThreads,
+          0.2, 1, 90, phaseOneLatch, successfulCount, unsuccessfulCount);
+      executorService.execute(phaseOneExecutor);
+      phaseOneLatch.await();
+
+      CountDownLatch phaseTwoLatch = new CountDownLatch((int) Math.ceil(numThreads * progressToReleaseLatch));
+      Runnable phaseTwoExecutor = new LiftRidesPhase(2, executorService, numThreads,
+          0.6, 91, 360, phaseTwoLatch, successfulCount, unsuccessfulCount);
+      executorService.execute(phaseTwoExecutor);
+      phaseTwoLatch.await();
+
+      int phaseThreeThreads = numThreads / 5;
+      CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeThreads);
+      Runnable phaseThreeExecutor = new LiftRidesPhase(3, executorService, phaseThreeThreads,
+          0.2, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
+      executorService.execute(phaseThreeExecutor);
+      phaseThreeLatch.await();
+
+    } catch (InterruptedException e) {
+      log.error(e);
+    }
     executorService.shutdown();
     while (!executorService.isTerminated()) {
       try {
