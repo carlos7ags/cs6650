@@ -67,6 +67,7 @@ public class LiftRidesThreadExtended implements Runnable {
         if (++tries == maxTries) {
           this.unsuccessfulCount.getAndIncrement();
           log.trace(e.getMessage());
+          break;
         }
       }
     }

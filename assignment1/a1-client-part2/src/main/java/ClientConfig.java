@@ -71,4 +71,9 @@ class ClientConfig {
     }
     this.numRuns = numRuns;
   }
+
+  @Override
+  public String toString() {
+    return String.format("PARAMETERS: numThreads: %d, numSkiers: %d, numLifts: %d, numRuns: %d", numThreads, numSkiers, numLifts, numRuns);
+  }
 }
