@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiftRidesPhaseExtended implements Runnable {
+public class LiftRidesPhaseExtended {
   static Logger log = Logger.getLogger(LiftRidesPhaseExtended.class.getName());
 
   private final ClientConfig clientConfig = new ClientConfig();
@@ -33,8 +33,7 @@ public class LiftRidesPhaseExtended implements Runnable {
     this.unsuccessfulCount = unsuccessfulCount;
   }
 
-  @Override
-  public void run() {
+  public void executePhase() {
     int numSkiers = clientConfig.getNumSkiers();
     int numRuns = clientConfig.getNumRuns();
     int skiLiftsNumber = clientConfig.getNumLifts();

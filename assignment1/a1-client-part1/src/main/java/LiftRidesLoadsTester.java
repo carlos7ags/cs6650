@@ -24,22 +24,22 @@ public class LiftRidesLoadsTester {
 
       int phaseOneNumThreads = numThreads / 4;
       CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneNumThreads * progressToReleaseLatch));
-      Runnable phaseOneExecutor = new LiftRidesPhase(1, executorService, phaseOneNumThreads,
+      LiftRidesPhase phaseOneExecutor = new LiftRidesPhase(1, executorService, phaseOneNumThreads,
           0.2, 1, 90, phaseOneLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseOneExecutor);
+      phaseOneExecutor.executePhase();
       phaseOneLatch.await();
 
       CountDownLatch phaseTwoLatch = new CountDownLatch((int) Math.ceil(numThreads * progressToReleaseLatch));
-      Runnable phaseTwoExecutor = new LiftRidesPhase(2, executorService, numThreads,
+      LiftRidesPhase phaseTwoExecutor = new LiftRidesPhase(2, executorService, numThreads,
           0.6, 91, 360, phaseTwoLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseTwoExecutor);
+      phaseTwoExecutor.executePhase();
       phaseTwoLatch.await();
 
-      int phaseThreeNumThreads = numThreads / 5;
+      int phaseThreeNumThreads = numThreads / 10;
       CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeNumThreads);
-      Runnable phaseThreeExecutor = new LiftRidesPhase(3, executorService, phaseThreeNumThreads,
-          0.2, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseThreeExecutor);
+      LiftRidesPhase phaseThreeExecutor = new LiftRidesPhase(3, executorService, phaseThreeNumThreads,
+          0.1, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
+      phaseThreeExecutor.executePhase();
       phaseThreeLatch.await();
 
     } catch (InterruptedException e) {

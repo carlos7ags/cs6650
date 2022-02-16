@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiftRidesPhase implements Runnable {
+public class LiftRidesPhase {
   static Logger log = Logger.getLogger(LiftRidesPhase.class.getName());
 
   private final ClientConfig clientConfig = new ClientConfig();
@@ -33,8 +33,7 @@ public class LiftRidesPhase implements Runnable {
     this.unsuccessfulCount = unsuccessfulCount;
   }
 
-  @Override
-  public void run() {
+  public void executePhase() {
     int numSkiers = clientConfig.getNumSkiers();
     int numRuns = clientConfig.getNumRuns();
     int skiLiftsNumber = clientConfig.getNumLifts();
@@ -46,7 +45,7 @@ public class LiftRidesPhase implements Runnable {
     for (int i = 0; i < phaseThreads; i++) {
       int startSkierID = (i * skiersPerThread) + 1;
       int endSkierID = (i + 1) * skiersPerThread;
-      log.info("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
+      log.trace("Initializing thread in phase " + phase + " - Requests:" + requestsNumber + ", startSkierID:" + startSkierID
           + ", endSkierID:" + endSkierID + ", startTime:" + startTime + ", endTime:" + endTime);
       Runnable thread = new LiftRidesThread(requestsNumber, skiLiftsNumber, startSkierID, endSkierID, startTime, endTime,
           serverBasePath, nextPhaseLatch, successfulCount, unsuccessfulCount);

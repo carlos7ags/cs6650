@@ -7,9 +7,12 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class LiftRidesThreadExtended implements Runnable {
   static Logger log = Logger.getLogger(LiftRidesThreadExtended.class.getName());
@@ -50,7 +53,7 @@ public class LiftRidesThreadExtended implements Runnable {
     client.setBasePath(serverBasePath);
   }
 
-  private void postNewLiftRide(SkiersApi apiInstance, int skierId, int liftId, int time, int waitTime) {
+  private RequestLog postNewLiftRide(SkiersApi apiInstance, int skierId, int liftId, int time, int waitTime) {
     int tries = 0;
     int maxTries = 5;
     LiftRide liftRide = new LiftRide();
@@ -63,23 +66,14 @@ public class LiftRidesThreadExtended implements Runnable {
         long startTime = System.currentTimeMillis();
         apiInstance.writeNewLiftRide(liftRide, this.RESORT_ID, this.SEASON_ID, this.DAY_ID, skierId);
         long endTime = System.currentTimeMillis();
-
-        try {
-          ByteBuffer buffer = ByteBuffer.wrap(
-              new RequestLog(this.phase, startTime, "POST", endTime - startTime, 201)
-                  .toString().getBytes(StandardCharsets.UTF_8));
-          LiftRidesLoadsTesterExtended.channel.write(buffer);
-        } catch (IOException e) {
-          log.error("Failed to write in summary file.", e);
-        }
-
+        RequestLog requestLog = new RequestLog(this.phase, startTime, "POST", endTime - startTime, 201);
         this.successfulCount.getAndIncrement();
-        break;
+        return requestLog;
       } catch (ApiException e) {
         if (++tries == maxTries) {
           this.unsuccessfulCount.getAndIncrement();
           log.trace(e.getMessage());
-          break;
+          return null;
         }
       }
     }
@@ -87,13 +81,28 @@ public class LiftRidesThreadExtended implements Runnable {
 
   @Override
   public void run() {
+    List<RequestLog> requestLogs = new ArrayList<>();
+    RequestLog requestLog;
+
     for (int i = 0; i < this.requestsNumber; i++) {
       int skierId = random.ints(this.startSkierId, this.endSkierId + 1).findAny().getAsInt();
       int liftId = random.ints(1, this.skiLiftsNumber + 1).findAny().getAsInt();
       int time = random.ints(this.starTime, this.endTime + 1).findAny().getAsInt();
       int waitTime = random.ints(0, 10 + 1).findAny().getAsInt();
-      this.postNewLiftRide(apiInstance, skierId, liftId, time, waitTime);
+      requestLog = this.postNewLiftRide(apiInstance, skierId, liftId, time, waitTime);
+      if (requestLog != null) {
+        requestLogs.add(requestLog);
+      }
     }
+
+    try {
+      String logsString = requestLogs.stream().map(Object::toString).collect(Collectors.joining(""));
+      ByteBuffer buffer = ByteBuffer.wrap(logsString.getBytes(StandardCharsets.UTF_8));
+      LiftRidesLoadsTesterExtended.channel.write(buffer);
+    } catch (IOException e) {
+      log.error("Failed to write in summary file.", e);
+    }
+
     this.nextPhaseLatch.countDown();
   }
 }

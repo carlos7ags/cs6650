@@ -21,13 +21,11 @@ public class LiftRidesLoadsTesterExtended {
 
   public static FileChannel channel;
   public static RandomAccessFile writer;
+  public static String reportFile = "logs/requests/log_" + new SimpleDateFormat("yyyyMMddHHmm'.csv'").format(new Date());
 
   static {
-    String reportFile = "logs/requests/log_" + new SimpleDateFormat("yyyyMMddHHmm'.csv'").format(new Date());
-
     try {
       FileUtils.touch(new File(reportFile));
-
       writer = new RandomAccessFile(reportFile, "rw");
       channel = writer.getChannel();
     } catch (IOException e) {
@@ -46,22 +44,22 @@ public class LiftRidesLoadsTesterExtended {
 
       int phaseOneNumThreads = numThreads / 4;
       CountDownLatch phaseOneLatch = new CountDownLatch((int) Math.ceil(phaseOneNumThreads * progressToReleaseLatch));
-      Runnable phaseOneExecutor = new LiftRidesPhaseExtended(1, executorService, phaseOneNumThreads,
+      LiftRidesPhaseExtended phaseOneExecutor = new LiftRidesPhaseExtended(1, executorService, phaseOneNumThreads,
           0.2, 1, 90, phaseOneLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseOneExecutor);
+      phaseOneExecutor.executePhase();
       phaseOneLatch.await();
 
       CountDownLatch phaseTwoLatch = new CountDownLatch((int) Math.ceil(numThreads * progressToReleaseLatch));
-      Runnable phaseTwoExecutor = new LiftRidesPhaseExtended(2, executorService, numThreads,
+      LiftRidesPhaseExtended phaseTwoExecutor = new LiftRidesPhaseExtended(2, executorService, numThreads,
           0.6, 91, 360, phaseTwoLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseTwoExecutor);
+      phaseTwoExecutor.executePhase();
       phaseTwoLatch.await();
 
-      int phaseThreeNumThreads = numThreads / 5;
+      int phaseThreeNumThreads = numThreads / 10;
       CountDownLatch phaseThreeLatch = new CountDownLatch(phaseThreeNumThreads);
-      Runnable phaseThreeExecutor = new LiftRidesPhaseExtended(3, executorService, phaseThreeNumThreads,
-          0.2, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
-      executorService.execute(phaseThreeExecutor);
+      LiftRidesPhaseExtended phaseThreeExecutor = new LiftRidesPhaseExtended(3, executorService, phaseThreeNumThreads,
+          0.1, 361, 420, phaseThreeLatch, successfulCount, unsuccessfulCount);
+      phaseThreeExecutor.executePhase();
       phaseThreeLatch.await();
 
     } catch (InterruptedException e) {
@@ -76,19 +74,22 @@ public class LiftRidesLoadsTesterExtended {
       }
     }
 
-
-    long totalRunTime = (System.currentTimeMillis() - phasesExecutorStartTime);
-    log.info("Successful requests: " + this.successfulCount.get());
-    log.info("Unsuccessful requests: " + this.unsuccessfulCount.get());
-    log.info("Total run time / wall time (milliseconds): " + totalRunTime);
-    log.info("Total throughput in requests per second: " + ((this.successfulCount.get() + this.unsuccessfulCount.get()) / (totalRunTime / 1000)));
-
     try {
       channel.close();
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
+
+    long totalRunTime = (System.currentTimeMillis() - phasesExecutorStartTime);
+    log.info("Successful requests: " + this.successfulCount.get());
+    log.info("Unsuccessful requests: " + this.unsuccessfulCount.get());
+    log.info("Total run time / wall time (milliseconds): " + totalRunTime);
+    log.info("Total throughput (requests per second): " + ((this.successfulCount.get() + this.unsuccessfulCount.get()) / (totalRunTime / 1000)));
+
+    LiftRidesLoadsTesterReport reportGenerator = new LiftRidesLoadsTesterReport(reportFile, totalRunTime);
+    reportGenerator.printReport();
+
   }
 
   public static void main(String[] args) {
