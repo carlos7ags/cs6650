@@ -1,12 +1,13 @@
 package com.cs6650.server2.servlets;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 
 import com.google.gson.Gson;
 import com.cs6650.server2.models.LiftRide;
 import com.cs6650.server2.models.ResponseMessage;
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -16,6 +17,7 @@ import java.io.PrintWriter;
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
@@ -47,14 +49,8 @@ public class SkiersServlet extends HttpServlet {
     } else {
       try {
         LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
-        int skierID = Integer.parseInt(urlPath.substring(urlPath.lastIndexOf('/') + 1));
-        liftRide.setSkierID(skierID);
-        Connection connection = this.factory.newConnection();
-        Channel channel = connection.createChannel();
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        channel.basicPublish("", QUEUE_NAME, null, gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8));
-        channel.close();
-
+        String skierID = urlPath.substring(urlPath.lastIndexOf('/') + 1);
+        this.publishRecord(skierID, liftRide);
         response.setStatus(HttpServletResponse.SC_OK);
         out.print(gson.toJson(new ResponseMessage("Lift ride correctly registered.")));
       } catch (TimeoutException | ConnectException e) {
@@ -106,7 +102,7 @@ public class SkiersServlet extends HttpServlet {
     out.flush();
   }
 
-  public static RequestURLType getRequestURLType(String urlPath) {
+  private static RequestURLType getRequestURLType(String urlPath) {
     Pattern isValidVertical = Pattern
             .compile("^/\\d+/seasons/[0-9]{4}/days/([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|36[0-6])/skiers/\\d+$");
     Pattern isValidVerticalBySeason = Pattern
@@ -120,4 +116,19 @@ public class SkiersServlet extends HttpServlet {
       return RequestURLType.INVALID_URL;
     }
   }
+
+  private void publishRecord(String skierID, LiftRide liftRide) throws IOException, TimeoutException {
+    Connection connection = this.factory.newConnection();
+    Channel channel = connection.createChannel();
+
+    Map<String, Object> headerMap = new HashMap<>();
+    headerMap.put("skierID", skierID);
+    BasicProperties properties = new BasicProperties().builder().headers(headerMap).build();
+
+    channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+    channel.basicPublish("", QUEUE_NAME, properties, gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8));
+    channel.close();
+    connection.close();
+  }
+
 }
