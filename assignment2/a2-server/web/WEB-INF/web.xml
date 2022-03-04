@@ -5,29 +5,29 @@
          version="4.0">
 
     <servlet>
-        <servlet-name>com.cs6650.server2.servlets.ResortsServlet</servlet-name>
+        <servlet-name>ResortsServlet</servlet-name>
         <servlet-class>com.cs6650.server2.servlets.ResortsServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>com.cs6650.server2.servlets.ResortsServlet</servlet-name>
+        <servlet-name>ResortsServlet</servlet-name>
         <url-pattern>/resorts/*</url-pattern>
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>com.cs6650.server2.servlets.SkiersServlet</servlet-name>
+        <servlet-name>SkiersServlet</servlet-name>
         <servlet-class>com.cs6650.server2.servlets.SkiersServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>com.cs6650.server2.servlets.SkiersServlet</servlet-name>
+        <servlet-name>SkiersServlet</servlet-name>
         <url-pattern>/skiers/*</url-pattern>
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>com.cs6650.server2.servlets.StatisticsServlet</servlet-name>
+        <servlet-name>StatisticsServlet</servlet-name>
         <servlet-class>com.cs6650.server2.servlets.StatisticsServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>com.cs6650.server2.servlets.StatisticsServlet</servlet-name>
+        <servlet-name>StatisticsServlet</servlet-name>
         <url-pattern>/statistics/*</url-pattern>
     </servlet-mapping>
 </web-app>

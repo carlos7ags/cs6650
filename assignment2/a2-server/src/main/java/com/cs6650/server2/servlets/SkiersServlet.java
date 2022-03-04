@@ -1,19 +1,39 @@
+package com.cs6650.server2.servlets;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
 import com.google.gson.Gson;
+import com.cs6650.server2.models.LiftRide;
+import com.cs6650.server2.models.ResponseMessage;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 public class SkiersServlet extends HttpServlet {
 
-  private Gson gson = new Gson();
+  private static Gson gson = new Gson();
+  private static ConnectionFactory factory;
+
   enum RequestURLType { VERTICAL, VERTICAL_BY_SEASON, INVALID_URL }
+  private final static String QUEUE_NAME = "liftride";
+
+  public SkiersServlet() {
+    factory = new ConnectionFactory();
+    factory.setHost("localhost");
+    factory.setUsername("user");
+    factory.setPassword("123");
+  }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -27,10 +47,21 @@ public class SkiersServlet extends HttpServlet {
     } else {
       try {
         LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
+        int skierID = Integer.parseInt(urlPath.substring(urlPath.lastIndexOf('/') + 1));
+        liftRide.setSkierID(skierID);
+        Connection connection = this.factory.newConnection();
+        Channel channel = connection.createChannel();
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        channel.basicPublish("", QUEUE_NAME, null, gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8));
+        channel.close();
+
         response.setStatus(HttpServletResponse.SC_OK);
-        TimeUnit.MILLISECONDS.sleep(7);
         out.print(gson.toJson(new ResponseMessage("Lift ride correctly registered.")));
-      } catch (IOException | InterruptedException e) {
+      } catch (TimeoutException | ConnectException e) {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        out.print(gson.toJson(new ResponseMessage("Server error. Connection timed out or refused.")));
+      } catch (IOException e) {
+        System.out.println(e);
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         out.print(gson.toJson(new ResponseMessage("Invalid input. Unprocessable entity.")));
       }
