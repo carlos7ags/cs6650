@@ -1,13 +1,11 @@
 package com.cs6650.server2.servlets;
 
-
+import com.cs6650.server2.utilities.RabbitMQChannelFactory;
+import com.cs6650.server2.utilities.RabbitMQUtil;
 import com.google.gson.Gson;
 import com.cs6650.server2.models.LiftRide;
 import com.cs6650.server2.models.ResponseMessage;
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -15,27 +13,16 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ConnectException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 public class SkiersServlet extends HttpServlet {
 
   private static Gson gson = new Gson();
-  private static ConnectionFactory factory;
-
+  RabbitMQUtil rabbitMQUtil = new RabbitMQUtil(new GenericObjectPool<>(new RabbitMQChannelFactory()));
   enum RequestURLType { VERTICAL, VERTICAL_BY_SEASON, INVALID_URL }
   private final static String QUEUE_NAME = "liftride";
-
-  public SkiersServlet() {
-    factory = new ConnectionFactory();
-    factory.setHost("localhost");
-    factory.setUsername("user");
-    factory.setPassword("123");
-  }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -50,10 +37,10 @@ public class SkiersServlet extends HttpServlet {
       try {
         LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
         String skierID = urlPath.substring(urlPath.lastIndexOf('/') + 1);
-        this.publishRecord(skierID, liftRide);
+        rabbitMQUtil.publishRecord(QUEUE_NAME, skierID, liftRide);
         response.setStatus(HttpServletResponse.SC_OK);
         out.print(gson.toJson(new ResponseMessage("Lift ride correctly registered.")));
-      } catch (TimeoutException | ConnectException e) {
+      } catch (ConnectException e) {
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         out.print(gson.toJson(new ResponseMessage("Server error. Connection timed out or refused.")));
       } catch (IOException e) {
@@ -116,19 +103,4 @@ public class SkiersServlet extends HttpServlet {
       return RequestURLType.INVALID_URL;
     }
   }
-
-  private void publishRecord(String skierID, LiftRide liftRide) throws IOException, TimeoutException {
-    Connection connection = this.factory.newConnection();
-    Channel channel = connection.createChannel();
-
-    Map<String, Object> headerMap = new HashMap<>();
-    headerMap.put("skierID", skierID);
-    BasicProperties properties = new BasicProperties().builder().headers(headerMap).build();
-
-    channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-    channel.basicPublish("", QUEUE_NAME, properties, gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8));
-    channel.close();
-    connection.close();
-  }
-
 }
