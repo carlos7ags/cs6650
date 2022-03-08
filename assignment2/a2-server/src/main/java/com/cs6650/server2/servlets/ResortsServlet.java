@@ -1,14 +1,15 @@
 package com.cs6650.server2.servlets;
 
+import com.cs6650.server2.models.Resort;
+import com.cs6650.server2.models.ResponseMessage;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import com.cs6650.server2.models.Resort;
-import com.cs6650.server2.models.ResponseMessage;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
@@ -20,8 +21,22 @@ import java.util.stream.Collectors;
 
 public class ResortsServlet extends HttpServlet {
 
-  private Gson gson = new Gson();
-  enum RequestURLType { UNIQUE_SKIERS, SEASONS, INVALID_URL }
+  private final Gson gson = new Gson();
+
+  public static ResortsServlet.RequestURLType getRequestURLType(String urlPath) {
+    Pattern isValidSeasonsByResort = Pattern
+        .compile("^/\\d+/seasons$");
+    Pattern isValidUniqueSkiers = Pattern
+        .compile("^/\\d+/seasons/[0-9]{4}/day/([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|36[0-6])/skiers$");
+
+    if (isValidSeasonsByResort.matcher(urlPath).matches()) {
+      return RequestURLType.SEASONS;
+    } else if (isValidUniqueSkiers.matcher(urlPath).matches()) {
+      return RequestURLType.UNIQUE_SKIERS;
+    } else {
+      return ResortsServlet.RequestURLType.INVALID_URL;
+    }
+  }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, JsonSyntaxException, IOException {
@@ -45,7 +60,8 @@ public class ResortsServlet extends HttpServlet {
     }
 
     String payload = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-    Type seasonMapType = new TypeToken<Map<String, String>>() {}.getType();
+    Type seasonMapType = new TypeToken<Map<String, String>>() {
+    }.getType();
     Map<String, String> payloadMap;
     try {
       payloadMap = gson.fromJson(payload, seasonMapType);
@@ -119,18 +135,5 @@ public class ResortsServlet extends HttpServlet {
 
   }
 
-  public static ResortsServlet.RequestURLType getRequestURLType(String urlPath) {
-    Pattern isValidSeasonsByResort = Pattern
-            .compile("^/\\d+/seasons$");
-    Pattern isValidUniqueSkiers = Pattern
-            .compile("^/\\d+/seasons/[0-9]{4}/day/([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|36[0-6])/skiers$");
-
-    if (isValidSeasonsByResort.matcher(urlPath).matches()) {
-      return RequestURLType.SEASONS;
-    } else if (isValidUniqueSkiers.matcher(urlPath).matches()) {
-      return RequestURLType.UNIQUE_SKIERS;
-    } else {
-      return ResortsServlet.RequestURLType.INVALID_URL;
-    }
-  }
+  enum RequestURLType {UNIQUE_SKIERS, SEASONS, INVALID_URL}
 }

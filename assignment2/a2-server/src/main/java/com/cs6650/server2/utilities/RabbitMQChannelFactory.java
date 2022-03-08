@@ -11,18 +11,15 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public class RabbitMQChannelFactory extends BasePooledObjectFactory<Channel> {
+  private ConnectionFactory factory;
   private Connection connection;
 
-  public RabbitMQChannelFactory() {
-    try {
-      ConnectionFactory factory = new ConnectionFactory();
-      factory.setHost("localhost");
-      factory.setUsername("user");
-      factory.setPassword("123");
-      this.connection = factory.newConnection();
-    } catch (IOException | TimeoutException e) {
-      e.printStackTrace();
-    }
+  public RabbitMQChannelFactory() throws IOException, TimeoutException {
+    this.factory = new ConnectionFactory();
+    this.factory.setHost(System.getenv("RABBITMQ_HOST"));
+    this.factory.setUsername(System.getenv("RABBITMQ_USER"));
+    this.factory.setPassword(System.getenv("RABBITMQ_PASSWORD"));
+    this.connection = factory.newConnection();
   }
 
   @Override

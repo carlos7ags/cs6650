@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 public class Consumer implements Runnable {
   private final String queueName;
@@ -22,23 +21,19 @@ public class Consumer implements Runnable {
   @Override
   public void run() {
     try {
-      Channel channel = connection.createChannel();
-
-      channel.basicQos(100);
-      System.out.println(" [*] Thread waiting for messages. To exit press CTRL+C");
-      channel.queueDeclare(queueName, false, false, false, null);
-
+      final Channel channel = connection.createChannel();
+      channel.queueDeclare(queueName, true, false, false, null);
+      System.out.println(" [*] Thread " + Thread.currentThread().getName() + " waiting for messages. To exit press CTRL+C");
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        String skierID = (String) delivery.getProperties().getHeaders().get("skierID");
+        Object skierID = delivery.getProperties().getHeaders().get("skierID");
         String record = new String(delivery.getBody(), "UTF-8");
         channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        System.out.println( "Callback thread ID = " + Thread.currentThread().getId() + " Received '" + record + "'" + " id '" + skierID + "'");
-        recordRepository.compute(skierID, (k, v) -> {
-          List<String> vals = v;
-          if(vals == null)
-            vals = new ArrayList<>();
-          vals.add(record);
-          return vals;
+        recordRepository.compute(skierID.toString(), (k, v) -> {
+          List<String> currentValues = v;
+          if(currentValues == null)
+            currentValues = new ArrayList<>();
+          currentValues.add(record);
+          return currentValues;
         });
       };
       channel.basicConsume(queueName, false, deliverCallback, consumerTag -> { });
