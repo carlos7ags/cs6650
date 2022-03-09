@@ -10,7 +10,6 @@ import javax.servlet.annotation.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet(name = "com.cs6650.server2.servlets.StatisticsServlet", value = "/com.cs6650.server2.servlets.StatisticsServlet")
 public class StatisticsServlet extends HttpServlet {
 
     private Gson gson = new Gson();

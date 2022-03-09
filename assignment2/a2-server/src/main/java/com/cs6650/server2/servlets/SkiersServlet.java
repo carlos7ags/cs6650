@@ -8,7 +8,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.log4j.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class SkiersServlet extends HttpServlet {
@@ -63,11 +63,11 @@ public class SkiersServlet extends HttpServlet {
       } catch (JsonSyntaxException | JsonIOException e) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         out.print(gson.toJson(new ResponseMessage("Invalid input. Unprocessable entity.")));
-        log.error(e);
+        log.info(e.toString());
       } catch (Exception e) {
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         out.print(gson.toJson(new ResponseMessage("Server error. Connection timed out or refused.")));
-        log.error(e);
+        log.info(e.toString());
       }
     }
     out.flush();
