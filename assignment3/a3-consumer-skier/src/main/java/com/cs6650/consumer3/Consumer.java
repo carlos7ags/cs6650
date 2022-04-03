@@ -1,10 +1,13 @@
 package com.cs6650.consumer3;
 
 import com.cs6650.datapublisher.RedisDataPublisher;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.DeliverCallback;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 
@@ -32,12 +35,13 @@ public class Consumer implements Runnable {
       channel.queueBind(queueName, exchangeName, "");
       System.out.println(" [*] Thread " + Thread.currentThread().getName() + " waiting for messages. To exit press CTRL+C");
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        String record = new String(delivery.getBody(), "UTF-8");
+        String record = new String(delivery.getBody(), StandardCharsets.UTF_8);
         Map<String, Object> headers = delivery.getProperties().getHeaders();
         redisDataPublisher.publishRecord(commands, headers, record);
         channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       };
-      channel.basicConsume(queueName, false, deliverCallback, consumerTag -> { });
+      channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
+      });
     } catch (Exception e) {
       e.printStackTrace();
     }

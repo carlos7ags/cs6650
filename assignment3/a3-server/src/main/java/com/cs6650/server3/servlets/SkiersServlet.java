@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class SkiersServlet extends HttpServlet {
-  private final String EXCHANGE_NAME = System.getenv("RABBITMQ_EXCHANGE_NAME");
-  static Logger log = Logger.getLogger(SkiersServlet.class.getName());
   private static final Gson gson = new Gson();
+  static Logger log = Logger.getLogger(SkiersServlet.class.getName());
+  private final String EXCHANGE_NAME = System.getenv("RABBITMQ_EXCHANGE_NAME");
   private RabbitMQUtil rabbitMQUtil = null;
 
   private static RequestURLType getRequestURLType(String urlPath) {

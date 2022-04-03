@@ -8,12 +8,14 @@ import com.rabbitmq.client.ConnectionFactory;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.support.*;
+import io.lettuce.core.support.ConnectionPoolSupport;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import java.io.IOException;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class LiftRideConsumer {
   private ExecutorService executorService;
@@ -21,6 +23,18 @@ public class LiftRideConsumer {
   private GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool;
   private RedisClient redisClient;
 
+  public static void main(String[] args) throws InterruptedException {
+    String exchangeName = args[0];
+    String queueName = args[1];
+    int numThreads = Integer.parseInt(args[2]);
+    int redisDatabase = Integer.parseInt(args[3]);
+    int timeout = Integer.parseInt(args[4]);
+
+    LiftRideConsumer liftRideConsumer = new LiftRideConsumer();
+    liftRideConsumer.startListening(exchangeName, queueName, redisDatabase, numThreads);
+    TimeUnit.MINUTES.sleep(timeout);
+    liftRideConsumer.stopListening();
+  }
 
   public void startListening(String exchangeName, String queueName, int redisDatabase, int numThreads) {
     executorService = Executors.newFixedThreadPool(numThreads);
@@ -73,24 +87,13 @@ public class LiftRideConsumer {
   public RedisDataPublisher createRedisDataPublisher(String modelName) {
     RedisDataPublisher redisDataPublisher = null;
     switch (modelName) {
-      case "skier":  redisDataPublisher = new RedisSkierDataPublisher();
+      case "skier":
+        redisDataPublisher = new RedisSkierDataPublisher();
         break;
-      case "resort":  redisDataPublisher = new RedisResortDataPublisher();
+      case "resort":
+        redisDataPublisher = new RedisResortDataPublisher();
         break;
     }
     return redisDataPublisher;
-  }
-
-  public static void main(String[] args) throws InterruptedException {
-    String exchangeName = args[0];
-    String queueName = args[1];
-    int numThreads = Integer.parseInt(args[2]);
-    int redisDatabase = Integer.parseInt(args[3]);
-    int timeout = Integer.parseInt(args[4]);
-
-    LiftRideConsumer liftRideConsumer = new LiftRideConsumer();
-    liftRideConsumer.startListening(exchangeName, queueName, redisDatabase, numThreads);
-    TimeUnit.MINUTES.sleep(timeout);
-    liftRideConsumer.stopListening();
   }
 }
