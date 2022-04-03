@@ -4,7 +4,6 @@ import com.cs6650.server3.models.LiftRide;
 import com.cs6650.server3.models.ResponseMessage;
 import com.cs6650.server3.utilities.RabbitMQChannelFactory;
 import com.cs6650.server3.utilities.RabbitMQUtil;
-import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;

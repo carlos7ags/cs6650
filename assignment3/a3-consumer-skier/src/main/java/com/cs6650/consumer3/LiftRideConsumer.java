@@ -1,5 +1,8 @@
 package com.cs6650.consumer3;
 
+import com.cs6650.datapublisher.RedisDataPublisher;
+import com.cs6650.datapublisher.RedisResortDataPublisher;
+import com.cs6650.datapublisher.RedisSkierDataPublisher;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.lettuce.core.RedisClient;
@@ -13,28 +16,22 @@ import java.io.IOException;
 import java.util.concurrent.*;
 
 public class LiftRideConsumer {
-  private final int numThreads;
-  private final String queueName;
-
   private ExecutorService executorService;
-  private Connection rabbitMQConnection = null;
+  private Connection rabbitMQConnection;
   private GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool;
   private RedisClient redisClient;
 
-  public LiftRideConsumer(String queueName, int numThreads) {
-    this.queueName = queueName;
-    this.numThreads = numThreads;
-  }
 
-  public void startListening() {
+  public void startListening(String exchangeName, String queueName, int numThreads) {
     executorService = Executors.newFixedThreadPool(numThreads);
-    redisConnectionPool = createRedisConnectionPool();
+    redisConnectionPool = createRedisConnectionPool(numThreads);
     ConnectionFactory rabbitMQConnectionFactory = createRabbitMQConnectionFactory();
+    RedisDataPublisher redisDataPublisher = createRedisDataPublisher(queueName);
 
     try {
       rabbitMQConnection = rabbitMQConnectionFactory.newConnection(executorService);
       for (int i = 0; i < numThreads; i++) {
-        executorService.execute(new Consumer(queueName, rabbitMQConnection, redisConnectionPool.borrowObject()));
+        executorService.execute(new Consumer(exchangeName, queueName, rabbitMQConnection, redisConnectionPool.borrowObject(), redisDataPublisher));
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -54,7 +51,7 @@ public class LiftRideConsumer {
     executorService.shutdown();
   }
 
-  private GenericObjectPool<StatefulRedisConnection<String, String>> createRedisConnectionPool() {
+  private GenericObjectPool<StatefulRedisConnection<String, String>> createRedisConnectionPool(int numThreads) {
     String host = System.getenv("REDIS_HOST");
     int port = Integer.parseInt(System.getenv("REDIS_PORT"));
     redisClient = RedisClient.create(RedisURI.create(host, port));
@@ -71,13 +68,25 @@ public class LiftRideConsumer {
     return rabbitMQConnectionfactory;
   }
 
-  public static void main(String[] args) throws InterruptedException {
-    String queueName = args[0];
-    int numThreads = Integer.parseInt(args[1]);
-    int timeout = Integer.parseInt(args[2]);
+  public RedisDataPublisher createRedisDataPublisher(String modelName) {
+    RedisDataPublisher redisDataPublisher = null;
+    switch (modelName) {
+      case "skier":  redisDataPublisher = new RedisSkierDataPublisher();
+        break;
+      case "resort":  redisDataPublisher = new RedisResortDataPublisher();
+        break;
+    }
+    return redisDataPublisher;
+  }
 
-    LiftRideConsumer liftRideConsumer = new LiftRideConsumer(queueName, numThreads);
-    liftRideConsumer.startListening();
+  public static void main(String[] args) throws InterruptedException {
+    String exchangeName = args[0];
+    String queueName = args[1];
+    int numThreads = Integer.parseInt(args[2]);
+    int timeout = Integer.parseInt(args[3]);
+
+    LiftRideConsumer liftRideConsumer = new LiftRideConsumer();
+    liftRideConsumer.startListening(exchangeName, queueName, numThreads);
     TimeUnit.MINUTES.sleep(timeout);
     liftRideConsumer.stopListening();
   }
