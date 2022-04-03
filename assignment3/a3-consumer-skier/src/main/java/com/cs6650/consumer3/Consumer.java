@@ -28,7 +28,6 @@ public class Consumer implements Runnable {
     try {
       Channel channel = rabbitMQConnection.createChannel();
       RedisCommands<String, String> commands = redisConnection.sync();
-
       channel.queueDeclare(queueName, true, false, false, null);
       channel.queueBind(queueName, exchangeName, "");
       System.out.println(" [*] Thread " + Thread.currentThread().getName() + " waiting for messages. To exit press CTRL+C");

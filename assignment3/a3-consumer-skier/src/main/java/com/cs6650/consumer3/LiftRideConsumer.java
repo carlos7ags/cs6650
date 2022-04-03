@@ -22,9 +22,9 @@ public class LiftRideConsumer {
   private RedisClient redisClient;
 
 
-  public void startListening(String exchangeName, String queueName, int numThreads) {
+  public void startListening(String exchangeName, String queueName, int redisDatabase, int numThreads) {
     executorService = Executors.newFixedThreadPool(numThreads);
-    redisConnectionPool = createRedisConnectionPool(numThreads);
+    redisConnectionPool = createRedisConnectionPool(redisDatabase, numThreads);
     ConnectionFactory rabbitMQConnectionFactory = createRabbitMQConnectionFactory();
     RedisDataPublisher redisDataPublisher = createRedisDataPublisher(queueName);
 
@@ -51,10 +51,12 @@ public class LiftRideConsumer {
     executorService.shutdown();
   }
 
-  private GenericObjectPool<StatefulRedisConnection<String, String>> createRedisConnectionPool(int numThreads) {
+  private GenericObjectPool<StatefulRedisConnection<String, String>> createRedisConnectionPool(int redisDatabase, int numThreads) {
     String host = System.getenv("REDIS_HOST");
     int port = Integer.parseInt(System.getenv("REDIS_PORT"));
-    redisClient = RedisClient.create(RedisURI.create(host, port));
+    RedisURI redisURI = RedisURI.create(host, port);
+    redisURI.setDatabase(redisDatabase);
+    redisClient = RedisClient.create(redisURI);
     GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
     poolConfig.setMaxTotal(numThreads);
     return ConnectionPoolSupport.createGenericObjectPool(redisClient::connect, poolConfig);
@@ -83,10 +85,11 @@ public class LiftRideConsumer {
     String exchangeName = args[0];
     String queueName = args[1];
     int numThreads = Integer.parseInt(args[2]);
-    int timeout = Integer.parseInt(args[3]);
+    int redisDatabase = Integer.parseInt(args[3]);
+    int timeout = Integer.parseInt(args[4]);
 
     LiftRideConsumer liftRideConsumer = new LiftRideConsumer();
-    liftRideConsumer.startListening(exchangeName, queueName, numThreads);
+    liftRideConsumer.startListening(exchangeName, queueName, redisDatabase, numThreads);
     TimeUnit.MINUTES.sleep(timeout);
     liftRideConsumer.stopListening();
   }
