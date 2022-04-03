@@ -1,0 +1,7 @@
+rabbitmq:
+  exchanges:
+    internal: internal.exchange
+    queues:
+      notificacion: notification.queue
+    rounting-keys:
+      internal-notification: internal.notification.rounting-key
