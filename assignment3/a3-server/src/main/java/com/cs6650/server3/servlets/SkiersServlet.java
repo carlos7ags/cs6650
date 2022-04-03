@@ -4,6 +4,7 @@ import com.cs6650.server3.models.LiftRide;
 import com.cs6650.server3.models.ResponseMessage;
 import com.cs6650.server3.utilities.RabbitMQChannelFactory;
 import com.cs6650.server3.utilities.RabbitMQUtil;
+import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -15,14 +16,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class SkiersServlet extends HttpServlet {
-  private final String QUEUE_NAME = System.getenv("RABBITMQ_QUEUE_NAME");
+  private final String EXCHANGE_NAME = System.getenv("RABBITMQ_EXCHANGE_NAME");
   static Logger log = Logger.getLogger(SkiersServlet.class.getName());
   private static final Gson gson = new Gson();
   private RabbitMQUtil rabbitMQUtil = null;
@@ -56,12 +59,15 @@ public class SkiersServlet extends HttpServlet {
         if (rabbitMQUtil == null) {
           rabbitMQUtil = new RabbitMQUtil(new GenericObjectPool<>(new RabbitMQChannelFactory()));
         }
-        LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
         List<String> urlParts = Arrays.asList(urlPath.split("/"));
-
-        String skierID = urlParts.get(7);
-        String day = urlParts.get(5);
-        rabbitMQUtil.publishRecord(QUEUE_NAME, day, skierID, liftRide);
+        Map<String, Object> messageHeaders = new HashMap<>();
+        messageHeaders.put("resort", urlParts.get(1));
+        messageHeaders.put("seasson", urlParts.get(3));
+        messageHeaders.put("day", urlParts.get(4));
+        messageHeaders.put("skierID", urlParts.get(7));
+        LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
+        byte[] message = gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8);
+        rabbitMQUtil.publishRecord(EXCHANGE_NAME, messageHeaders, message);
         response.setStatus(HttpServletResponse.SC_OK);
         out.print(gson.toJson(new ResponseMessage("Lift ride correctly registered.")));
       } catch (JsonSyntaxException | JsonIOException e) {
