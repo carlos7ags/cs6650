@@ -18,10 +18,11 @@ public class RabbitMQUtil {
     this.pool = pool;
   }
 
-  public void publishRecord(String queueName, String skierID, LiftRide liftRide) throws Exception {
+  public void publishRecord(String queueName, String day, String skierID, LiftRide liftRide) throws Exception {
       Channel channel = pool.borrowObject();
       Map<String, Object> headerMap = new HashMap<>();
       headerMap.put("skierID", skierID);
+      headerMap.put("day", day);
       AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().headers(headerMap).build();
       channel.queueDeclare(queueName, true, false, false, null);
       channel.basicPublish("", queueName, properties, gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8));

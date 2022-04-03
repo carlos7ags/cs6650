@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -56,8 +57,11 @@ public class SkiersServlet extends HttpServlet {
           rabbitMQUtil = new RabbitMQUtil(new GenericObjectPool<>(new RabbitMQChannelFactory()));
         }
         LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
-        String skierID = urlPath.substring(urlPath.lastIndexOf('/') + 1);
-        rabbitMQUtil.publishRecord(QUEUE_NAME, skierID, liftRide);
+        List<String> urlParts = Arrays.asList(urlPath.split("/"));
+
+        String skierID = urlParts.get(7);
+        String day = urlParts.get(5);
+        rabbitMQUtil.publishRecord(QUEUE_NAME, day, skierID, liftRide);
         response.setStatus(HttpServletResponse.SC_OK);
         out.print(gson.toJson(new ResponseMessage("Lift ride correctly registered.")));
       } catch (JsonSyntaxException | JsonIOException e) {

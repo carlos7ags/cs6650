@@ -5,8 +5,9 @@ import com.rabbitmq.client.ConnectionFactory;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.support.*;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import java.io.IOException;
 import java.util.concurrent.*;
@@ -16,9 +17,9 @@ public class LiftRideConsumer {
   private final String queueName;
 
   private ExecutorService executorService;
-  private ConnectionFactory rabbitMQConnectionFactory;
   private Connection rabbitMQConnection = null;
-  private AsyncPool<StatefulRedisConnection<String, String>> redisConnectionAsyncPool;
+  private GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool;
+  private RedisClient redisClient;
 
   public LiftRideConsumer(String queueName, int numThreads) {
     this.queueName = queueName;
@@ -27,25 +28,25 @@ public class LiftRideConsumer {
 
   public void startListening() {
     executorService = Executors.newFixedThreadPool(numThreads);
-    rabbitMQConnectionFactory = createRabbitMQConnectionFactory();
-    redisConnectionAsyncPool = createRedisConnectionPool();
+    redisConnectionPool = createRedisConnectionPool();
+    ConnectionFactory rabbitMQConnectionFactory = createRabbitMQConnectionFactory();
 
     try {
       rabbitMQConnection = rabbitMQConnectionFactory.newConnection(executorService);
       for (int i = 0; i < numThreads; i++) {
-        executorService.execute(new Consumer(queueName, rabbitMQConnection, redisConnectionAsyncPool));
+        executorService.execute(new Consumer(queueName, rabbitMQConnection, redisConnectionPool));
       }
     } catch (IOException | TimeoutException e) {
       e.printStackTrace();
     }
-
   }
 
   public void stopListening() {
     if (rabbitMQConnection != null && rabbitMQConnection.isOpen()) {
       try {
         rabbitMQConnection.close();
-        redisConnectionAsyncPool.close();
+        redisConnectionPool.close();
+        redisClient.shutdown();
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -53,14 +54,11 @@ public class LiftRideConsumer {
     executorService.shutdown();
   }
 
-  private AsyncPool<StatefulRedisConnection<String, String>> createRedisConnectionPool() {
+  private GenericObjectPool<StatefulRedisConnection<String, String>> createRedisConnectionPool() {
     String host = System.getenv("REDIS_HOST");
     int port = Integer.parseInt(System.getenv("REDIS_PORT"));
-    RedisClient client = RedisClient.create();
-
-    return AsyncConnectionPoolSupport.createBoundedObjectPool(
-        () -> client.connectAsync(StringCodec.UTF8, RedisURI.create(host, port)),
-        BoundedPoolConfig.create());
+    redisClient = RedisClient.create(RedisURI.create(host, port));
+    return ConnectionPoolSupport.createGenericObjectPool(redisClient::connect, new GenericObjectPoolConfig());
   }
 
   private ConnectionFactory createRabbitMQConnectionFactory() {
