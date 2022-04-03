@@ -34,9 +34,9 @@ public class LiftRideConsumer {
     try {
       rabbitMQConnection = rabbitMQConnectionFactory.newConnection(executorService);
       for (int i = 0; i < numThreads; i++) {
-        executorService.execute(new Consumer(queueName, rabbitMQConnection, redisConnectionPool));
+        executorService.execute(new Consumer(queueName, rabbitMQConnection, redisConnectionPool.borrowObject()));
       }
-    } catch (IOException | TimeoutException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -58,7 +58,9 @@ public class LiftRideConsumer {
     String host = System.getenv("REDIS_HOST");
     int port = Integer.parseInt(System.getenv("REDIS_PORT"));
     redisClient = RedisClient.create(RedisURI.create(host, port));
-    return ConnectionPoolSupport.createGenericObjectPool(redisClient::connect, new GenericObjectPoolConfig());
+    GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+    poolConfig.setMaxTotal(numThreads);
+    return ConnectionPoolSupport.createGenericObjectPool(redisClient::connect, poolConfig);
   }
 
   private ConnectionFactory createRabbitMQConnectionFactory() {

@@ -3,7 +3,6 @@ package com.cs6650.consumer3;
 import com.rabbitmq.client.*;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
-import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +10,13 @@ import java.util.List;
 public class Consumer implements Runnable {
   private final String queueName;
   private final Connection rabbitMQConnection;
-  private final GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool;
   private RedisCommands<String, String> commands;
   StatefulRedisConnection<String, String> connection;
 
-  public Consumer(String queueName, Connection rabbitMQConnection, GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool) {
+  public Consumer(String queueName, Connection rabbitMQConnection, StatefulRedisConnection<String, String> connection) {
       this.queueName = queueName;
       this.rabbitMQConnection = rabbitMQConnection;
-      this.redisConnectionPool = redisConnectionPool;
+      this.connection = connection;
     }
 
   @Override
@@ -26,7 +24,6 @@ public class Consumer implements Runnable {
     try {
       final Channel channel = rabbitMQConnection.createChannel();
       channel.queueDeclare(queueName, true, false, false, null);
-      connection = redisConnectionPool.borrowObject();
       commands = connection.sync();
       System.out.println(" [*] Thread " + Thread.currentThread().getName() + " waiting for messages. To exit press CTRL+C");
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
