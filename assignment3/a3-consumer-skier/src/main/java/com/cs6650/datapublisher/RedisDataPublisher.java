@@ -1,9 +1,9 @@
 package com.cs6650.datapublisher;
 
-public abstract class RedisDataPublisher implements RedisDataPublisherInterface {
+import io.lettuce.core.api.sync.RedisCommands;
 
-  protected String addRecord(String listOfRecords, String record) {
-    return listOfRecords.substring(0, listOfRecords.length() - 1) + ", " + record + "]";
-  }
+import java.util.Map;
 
+public interface RedisDataPublisher {
+  void publishRecord(RedisCommands<String, String> commands, Map<String, Object> headers, String message);
 }

@@ -3,6 +3,7 @@ package com.cs6650.consumer3;
 import com.cs6650.datapublisher.RedisDataPublisher;
 import com.cs6650.datapublisher.RedisResortDataPublisher;
 import com.cs6650.datapublisher.RedisSkierDataPublisher;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.lettuce.core.RedisClient;

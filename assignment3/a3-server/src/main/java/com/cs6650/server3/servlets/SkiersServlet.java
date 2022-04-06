@@ -7,6 +7,7 @@ import com.cs6650.server3.utilities.RabbitMQUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.rabbitmq.client.Channel;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import javax.servlet.ServletException;
@@ -61,8 +62,8 @@ public class SkiersServlet extends HttpServlet {
         List<String> urlParts = Arrays.asList(urlPath.split("/"));
         Map<String, Object> messageHeaders = new HashMap<>();
         messageHeaders.put("resort", urlParts.get(1));
-        messageHeaders.put("seasson", urlParts.get(3));
-        messageHeaders.put("day", urlParts.get(4));
+        messageHeaders.put("season", urlParts.get(3));
+        messageHeaders.put("day", urlParts.get(5));
         messageHeaders.put("skierID", urlParts.get(7));
         LiftRide liftRide = gson.fromJson(request.getReader(), LiftRide.class);
         byte[] message = gson.toJson(liftRide).getBytes(StandardCharsets.UTF_8);
