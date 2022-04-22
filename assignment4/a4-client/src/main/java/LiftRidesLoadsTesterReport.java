@@ -47,7 +47,7 @@ public class LiftRidesLoadsTesterReport {
         e.printStackTrace();
       }
       this.closeReader();
-      throughput = count / (runtime / 1000);
+      throughput = count / (runtime / 1000F);
       meanResponseTime = latencies.stream().reduce(0, Integer::sum) / (double) count;
       Collections.sort(latencies);
       medianResponseTime = latencies.get((int) (count / 2));

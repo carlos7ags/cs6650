@@ -9,10 +9,10 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +31,7 @@ public class SkiersServlet extends HttpServlet {
 
   private static RequestURLType getRequestURLType(String urlPath) {
     Pattern isValidVertical = Pattern
-        .compile("^/\\d+/seasons/[0-9]{4}/days/([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|36[0-6])/skiers/\\d+$");
+        .compile("^/\\d+/seasons/\\d{4}/days/([1-9]|[1-9]\\d|[1-2]\\d\\d|3[0-5]\\d|36[0-6])/skiers/\\d+$");
     Pattern isValidVerticalBySeason = Pattern
         .compile("^/\\d+/vertical$");
 

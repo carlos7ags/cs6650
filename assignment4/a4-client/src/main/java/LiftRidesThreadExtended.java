@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 
 public class LiftRidesThreadExtended implements Runnable {
   static Logger log = Logger.getLogger(LiftRidesThreadExtended.class.getName());
-  private final int RESORT_ID = 1;
+  private final int RESORT_ID = 27;
   private final String SEASON_ID = "2022";
-  private final String DAY_ID = "27";
+  private final String DAY_ID = "3";
 
   private final CountDownLatch nextPhaseLatch;
   private final AtomicInteger successfulCount;
