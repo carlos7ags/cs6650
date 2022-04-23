@@ -135,11 +135,11 @@ public class ResortsServlet extends HttpServlet {
       case UNIQUE_SKIERS:
         String uniqueSkiers = command.get(getUniqueSkiersKey(urlPath));
         uniqueSkiers = Objects.isNull(uniqueSkiers) ? "0" : uniqueSkiers;
-        HashMap<String, Object> skierVerticalsMap = new HashMap<>();
-        skierVerticalsMap.put("resort", resort);
-        skierVerticalsMap.put("numSkiers", Integer.parseInt(uniqueSkiers));
+        HashMap<String, Object> uniqueSkiersMap = new HashMap<>();
+        uniqueSkiersMap.put("resort", resort);
+        uniqueSkiersMap.put("numSkiers", Integer.parseInt(uniqueSkiers));
         response.setStatus(HttpServletResponse.SC_OK);
-        out.print(gson.toJson(new ResponseMessage("Skiers list retrieved.")));
+        out.print(gson.toJson(uniqueSkiersMap));
         break;
       case SEASONS:
         response.setStatus(HttpServletResponse.SC_OK);
