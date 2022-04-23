@@ -8,8 +8,11 @@ public class RedisResortDataPublisher implements RedisDataPublisher {
 
   @Override
   public void publishRecord(RedisCommands<String, String> commands, Map<String, Object> headers, String message) {
-    String key = String.join("-", headers.get("resort").toString(), headers.get("season").toString(), headers.get("day").toString());
-    commands.sadd(key + "-visitedSkierID", headers.get("skierID").toString());
+    String key = String.join("-",
+            headers.get("resort").toString(),
+            headers.get("season").toString(),
+            headers.get("day").toString());
     commands.rpush(key, message);
+    commands.sadd(key + "-visitedSkierID", headers.get("skierID").toString());
   }
 }
