@@ -133,11 +133,10 @@ public class ResortsServlet extends HttpServlet {
     String resort = urlParts.get(1);
     switch (urlType) {
       case UNIQUE_SKIERS:
-        String uniqueSkiers = command.get(getUniqueSkiersKey(urlPath));
-        uniqueSkiers = Objects.isNull(uniqueSkiers) ? "0" : uniqueSkiers;
+        Long uniqueSkiers = command.scard(getUniqueSkiersKey(urlPath));
         HashMap<String, Object> uniqueSkiersMap = new HashMap<>();
         uniqueSkiersMap.put("resort", resort);
-        uniqueSkiersMap.put("numSkiers", Integer.parseInt(uniqueSkiers));
+        uniqueSkiersMap.put("numSkiers", uniqueSkiers);
         response.setStatus(HttpServletResponse.SC_OK);
         out.print(gson.toJson(uniqueSkiersMap));
         break;
