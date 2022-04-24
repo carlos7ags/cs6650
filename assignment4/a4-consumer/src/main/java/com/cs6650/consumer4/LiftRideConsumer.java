@@ -11,6 +11,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.support.ConnectionPoolSupport;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -18,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class LiftRideConsumer {
+  static Logger log = Logger.getLogger(RedisSkierDataPublisher.class.getName());
+
   private ExecutorService executorService;
   private Connection rabbitMQConnection;
   private GenericObjectPool<StatefulRedisConnection<String, String>> redisConnectionPool;
@@ -48,7 +51,7 @@ public class LiftRideConsumer {
         executorService.execute(new Consumer(exchangeName, queueName, rabbitMQConnection, redisConnectionPool.borrowObject(), redisDataPublisher));
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
     }
   }
 
@@ -59,7 +62,7 @@ public class LiftRideConsumer {
         redisConnectionPool.close();
         redisClient.shutdown();
       } catch (IOException e) {
-        e.printStackTrace();
+        log.error(e);
       }
     }
     executorService.shutdown();

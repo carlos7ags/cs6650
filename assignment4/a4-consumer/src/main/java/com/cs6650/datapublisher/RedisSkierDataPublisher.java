@@ -1,13 +1,14 @@
 package com.cs6650.datapublisher;
 
-    import com.fasterxml.jackson.core.JsonProcessingException;
     import com.fasterxml.jackson.databind.ObjectMapper;
     import io.lettuce.core.api.sync.RedisCommands;
-
+    import java.io.IOException;
     import java.util.HashMap;
     import java.util.Map;
+    import org.apache.log4j.Logger;
 
 public class RedisSkierDataPublisher implements RedisDataPublisher {
+    static Logger log = Logger.getLogger(RedisSkierDataPublisher.class.getName());
 
   @Override
   public void publishRecord(RedisCommands<String, String> commands, Map<String, Object> headers, String message) {
@@ -39,8 +40,8 @@ public class RedisSkierDataPublisher implements RedisDataPublisher {
                 "dailyVertical");
         commands.incrby(totalVerticalKey, vertical);
         commands.incrby(dailyVerticalKey, vertical);
-    } catch (JsonProcessingException e) {
-        e.printStackTrace();
+    } catch (IOException e) {
+        log.error(e);
     }
   }
 }
